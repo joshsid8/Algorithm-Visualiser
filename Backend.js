@@ -33,7 +33,7 @@ function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visu
     return { array, bars: sticks };
 }
 
-// TODO: Instead of generating a whole array, instead, there should already be an initialised list, and the button should randomise it
+// TODO: Instead of generating a whole array, there should already be an initialised list, and the button should randomise it
 function randomiseArray(array, sticks) {
     allSorted = false;
     for (let i = 0; i < array.length; i++) {
