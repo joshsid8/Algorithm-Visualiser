@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Algorithm Visualiser</title>
+    <link rel="stylesheet" href="Cosmetics.css">
+</head>
+<body>
+<header class="everything">
+    <h1>Algorithm Visualiser</h1>
+
+    <p>Swaps: <span id="swapsValue">0</span></p>
+    <p>Comparisons: <span id="comparisonsValue">0</span></p>
+
+    <div class="controls">
+        <label>Array Length: <input type="text"  id="lengthInput" value="30"></label><br>
+        <label>Interval in ms: <input type="range" id="speedInput" value="50"><span id="speedValue">50</span></label><br>
+
+        <button id="randomiseBtn">Randomise Array</button><br>
+        <button id="sortBtn">Start Sorting</button>
+    </div>
+
+    <div id="visualizer-container"></div>
+
+    <h2><span id="allSortedValue"></span></h2>
+    <script src="Backend.js"></script>
+    <script src="index.js"></script>
+</header>
+</body>
+</html>
