@@ -4,13 +4,19 @@ let arrayLength = document.getElementById('lengthInput');
 let speedMs = document.getElementById('speedInput');
 let swaps = 0;
 let comparisons = 0;
-let allSortedText = document.getElementById('allSortedValue');
+let statusText = document.getElementById('allSortedValue');
 let allSorted = false;
 let sorting = false;
 
 function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visualizer-container') {
-    allSortedText.textContent = '';
-    allSorted = false; //TODO: once the randomise function is implemented, this should be true
+    statusText.textContent = '';
+    allSorted = true;
+    swaps = 0;
+    comparisons = 0;
+    const swapsEl = document.getElementById('swapsValue');
+    if (swapsEl) swapsEl.textContent = '0';
+    const compsEl = document.getElementById('comparisonsValue');
+    if (compsEl) compsEl.textContent = '0';
     const container = document.getElementById(containerId);
     container.innerHTML = '';
 
@@ -30,23 +36,43 @@ function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visu
         sticks.push(stick);
     }
 
-    return { array, bars: sticks };
+    return { array, sticks: sticks };
 }
-
-// TODO: Instead of generating a whole array, there should already be an initialised list, and the button should randomise it
+// TODO: Array length changing isnt being used. find a fix
 function randomiseArray(array, sticks) {
+    if (!sticks && typeof currentData !== 'undefined' && currentData.sticks) {
+        sticks = currentData.sticks;
+    }
+
     allSorted = false;
-    for (let i = 0; i < array.length; i++) {
-        sticks[i].classList.remove('sorted');
-        sticks[i].classList.remove('comparing');
-        sticks[i].classList.remove('swapping');
+    swaps = 0;
+    comparisons = 0;
+    const swapsText = document.getElementById('swapsValue');
+    if (swapsText) swapsText.textContent = '0';
+    const compsText = document.getElementById('comparisonsValue');
+    if (compsText) compsText.textContent = '0';
+    if (statusText) statusText.textContent = '';
+
+    // Changes the array data
+    for (let i = array.length - 1; i > 0; i--) {
+        // TODO: Find out how this ensures no duplicates :(
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+
+    // Applies said data to the heights of the sticks
+    if (sticks) {
+        for (let i = 0; i < sticks.length; i++) {
+            sticks[i].classList.remove('sorted', 'comparing', 'swapping');
+            sticks[i].style.height = `${array[i]}%`;
+        }
     }
 }
 
 // sample from gemini
 async function bubbleSort(array, sticks) {
     if (allSorted === true)
-        throw new Error(allSortedText.textContent = 'Randomise the sorted list first >:(');
+        throw new Error(statusText.textContent = 'Randomise the sorted list first >:(');
     sorting = true;
     const n = array.length;
     update(sticks);
@@ -71,7 +97,7 @@ async function bubbleSort(array, sticks) {
                 sticks[j].style.height = `${array[j]}%`;
                 sticks[j + 1].style.height = `${array[j + 1]}%`;
                 update(sticks);
-                await sleep(speedMs);
+                await sleep(speedMs.value);
                 sticks[j].classList.remove('swapping');
                 sticks[j + 1].classList.remove('swapping');
             }
@@ -89,12 +115,12 @@ function update(sticks) {
     const check = checkAllSorted(sticks)
     document.getElementById('swapsValue').textContent = swaps.toString();
     document.getElementById('comparisonsValue').textContent = comparisons.toString();
-    allSortedText.textContent = check === false ? 'Sorting...' : 'Everything is sorted!';
+    statusText.textContent = check === false ? 'Sorting...' : 'Everything is sorted!';
 }
 
 
 function checkAllSorted(sticks) {
-    for (let i = 0; i < sticks.length - 1; i++) {
+    for (let i = 0; i < sticks.length; i++) {
         if (!sticks[i].classList.contains('sorted')) {
             allSorted = false;
             return false;

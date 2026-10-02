@@ -1,6 +1,5 @@
-let currentData = { array: [], bars: [] };
+let currentData = { array: [], sticks: [] };
 
-// Generate array when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     currentData = initialiseArray(parseInt(arrayLength.value));
 
@@ -10,9 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (randomiseBtn) {
         randomiseBtn.addEventListener('click', () => {
-            // TODO: Add a randomise array function, replacing below
-            currentData = initialiseArray(parseInt(arrayLength.value)); // TODO: this function should be called once the array length changes instead
-            randomiseArray(currentData.array);
+            randomiseArray(currentData.array, currentData.sticks);
         });
     }
 
@@ -22,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sortBtn.addEventListener('click', async () => {
             sortBtn.disabled = true;
             randomiseBtn.disabled = true;
-            await bubbleSort(currentData.array, currentData.bars, parseInt(speedMs.value));
+            await bubbleSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
             sortBtn.disabled = false;
             randomiseBtn.disabled = false;
         });
