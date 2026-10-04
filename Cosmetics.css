@@ -17,8 +17,51 @@ button {font-family: Verdana, serif;text-align: center;
     width: 80%;
     margin: auto;
     border-radius: 5px;
-    background-color: #f3f3f3;
+    background-color: #f3fdff;
     z-index: 0;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.sortSettingsDropdown{
+    display: inline-block;
+    cursor: pointer;
+}
+
+.ssDropdown {
+    display: none;
+    position: absolute;
+    background-color: #f9f9f9;
+    min-width: 140px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+
+.ssDropdown button {
+    color: black;
+    padding: 10px 14px;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    background-color: white;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+.ssDropdown button:hover {
+    background-color: #88b3f8;
+    color: white;
+}
+
+.dropdown:hover .ssDropdown,
+.dropdown.show .ssDropdown,
+.ssDropdown.show {
+    display: block;
 }
 
 #visualizer-container {
@@ -40,4 +83,6 @@ button {font-family: Verdana, serif;text-align: center;
 
 .stick.comparing { background-color: #afdff9; }
 .stick.swapping  { background-color: #3d74ff; }
+.stick.smallest  { background-color: #0031ae; }
 .stick.sorted    { background-color: #a6e3a1; }
+.stick.sorted-all { background-color: #ebff66; }

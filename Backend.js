@@ -1,5 +1,6 @@
 // We don't know what promise is, but we use it anyway!!!
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let currentSortMethod = 'Selection Sort';
 let arrayLength = document.getElementById('lengthInput');
 let speedMs = document.getElementById('speedInput');
 let swaps = 0;
@@ -7,6 +8,7 @@ let comparisons = 0;
 let statusText = document.getElementById('allSortedValue');
 let allSorted = false;
 let sorting = false;
+let waitOnComparison = false;
 
 function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visualizer-container') {
     statusText.textContent = '';
@@ -63,7 +65,7 @@ function randomiseArray(array, sticks) {
     // Applies said data to the heights of the sticks
     if (sticks) {
         for (let i = 0; i < sticks.length; i++) {
-            sticks[i].classList.remove('sorted', 'comparing', 'swapping');
+            sticks[i].classList.remove('sorted', 'comparing', 'swapping', 'sorted-all');
             sticks[i].style.height = `${array[i]}%`;
         }
     }
@@ -71,11 +73,7 @@ function randomiseArray(array, sticks) {
 
 // sample from gemini
 async function bubbleSort(array, sticks) {
-    if (allSorted === true)
-        throw new Error(statusText.textContent = 'Randomise the sorted list first >:(');
-    sorting = true;
     const n = array.length;
-    update(sticks);
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n - i - 1; j++) {
             // Highlight active comparisons
@@ -111,13 +109,116 @@ async function bubbleSort(array, sticks) {
     }
 }
 
+async function selectionSort(array, sticks) {
+    const n = array.length;
+    for (let i = 0; i < n - 1; i++){
+        // assumes the first element is the smallest
+        let min = i;
+        sticks[min].classList.add('smallest');
+
+        for (let j = i + 1; j < n; j++){
+            sticks[j].classList.add('comparing');
+            comparisons++;
+            if (waitOnComparison) await sleep(speedMs.value);
+            // if we find a smaller element, change the min variable
+            if (array[j] < array[min]){
+                sticks[min].classList.remove('smallest');
+                min = j;
+                sticks[min].classList.add('smallest');
+            }
+            sticks[j].classList.remove('comparing');
+            update(sticks);
+        }
+
+        if (min !== i){
+            sticks[min].classList.add('swapping');
+            sticks[i].classList.add('swapping');
+            swaps++;
+            await sleep(speedMs.value);
+            const temp = array[i];
+            array[i] = array[min];
+            array[min] = temp;
+
+            sticks[i].style.height = `${array[i]}%`;
+            sticks[min].style.height = `${array[min]}%`;
+            sticks[i].classList.remove('swapping');
+            sticks[min].classList.remove('swapping');
+            sticks[i].classList.add('sorted');
+        }
+        else sticks[min].classList.add('sorted');
+        sticks[min].classList.remove('smallest');
+        update(sticks);
+    }
+    sticks[n - 1].classList.remove('comparing');
+    sticks[n - 1].classList.add('sorted');
+    update(sticks);
+}
+
+async function insertionSort(array, sticks) {
+    const n = array.length;
+
+    // Changes & Fixes Summary:
+    // 1. Infinite loop fix: In the original code, the index variable was never decremented inside the loop.
+    // 2. Index tracking & swap fix: The original code swapped array[i] and array[latter] directly instead of moving
+    //    the current element step-by-step through adjacent swaps (j and j - 1), which corrupted the array order and stick heights.
+    // 3. Comparisons and visual highlights: Added proper comparison highlighting ('comparing'), comparison counting for each check,
+    //    and cleaned up 'swapping' / 'comparing' CSS classes appropriately.
+    // 4. Sorted state completion: Added a final pass to mark all sticks (indices 0 to n - 1) as 'sorted' so checkAllSorted() registers completion.
+
+    for (let i = 1; i < n; i++) {
+        let j = i;
+
+        while (j > 0) {
+            // Highlight active comparison
+            sticks[j].classList.add('comparing');
+            sticks[j - 1].classList.add('comparing');
+            comparisons++;
+            if (waitOnComparison) await sleep(speedMs.value);
+
+            if (array[j - 1] > array[j]) {
+                sticks[j].classList.remove('comparing');
+                sticks[j - 1].classList.remove('comparing');
+
+                // Highlight active swap
+                sticks[j].classList.add('swapping');
+                sticks[j - 1].classList.add('swapping');
+                swaps++;
+
+                // Swap values in JS array
+                [array[j], array[j - 1]] = [array[j - 1], array[j]];
+
+                // Update DOM heights
+                sticks[j].style.height = `${array[j]}%`;
+                sticks[j - 1].style.height = `${array[j - 1]}%`;
+                update(sticks);
+                await sleep(speedMs.value);
+
+                sticks[j].classList.remove('swapping');
+                sticks[j - 1].classList.remove('swapping');
+
+                // Decrement j to step backwards through the sorted sub-array
+                j--;
+            } else {
+                sticks[j].classList.remove('comparing');
+                sticks[j - 1].classList.remove('comparing');
+                break;
+            }
+        }
+    }
+
+    // Mark all elements as sorted at the end
+    for (let i = 0; i < n; i++) {
+        sticks[i].classList.add('sorted');
+    }
+    update(sticks);
+}
+
 function update(sticks) {
     const check = checkAllSorted(sticks)
     document.getElementById('swapsValue').textContent = swaps.toString();
     document.getElementById('comparisonsValue').textContent = comparisons.toString();
     statusText.textContent = check === false ? 'Sorting...' : 'Everything is sorted!';
 }
-
 
 function checkAllSorted(sticks) {
     for (let i = 0; i < sticks.length; i++) {
@@ -126,7 +227,35 @@ function checkAllSorted(sticks) {
             return false;
         }
     }
-    sorting = false;
-    allSorted = true;
+    if (!allSorted) {
+        allSorted = true;
+        sorting = false;
+        allSortedCue(sticks);
+    }
     return true;
+}
+
+// Improved by Junie
+async function allSortedCue(sticks) {
+    for (let i = 0; i < sticks.length; i++) {
+        if (!sticks[i].classList.contains('sorted') || sticks[i].classList.contains('sorted-all')) {
+            return;
+        }
+    }
+    const waveWidth = 3;
+    const stepDelay = 20;
+
+    for (let i = 0; i < sticks.length + waveWidth; i++) {
+        if (i < sticks.length) {
+            sticks[i].classList.add('sorted-all');
+        }
+        if (i - waveWidth >= 0 && i - waveWidth < sticks.length) {
+            sticks[i - waveWidth].classList.remove('sorted-all');
+        }
+        await sleep(stepDelay);
+    }
+
+    for (let i = 0; i < sticks.length; i++) {
+        sticks[i].classList.remove('sorted-all');
+    }
 }
