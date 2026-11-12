@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bubbleSortBtn = document.getElementById('bubbleSortDD');
     const selectionSortBtn = document.getElementById('selectionSortDD');
     const insertionSortBtn = document.getElementById('insertionSortDD');
+    const shakerSortBtn = document.getElementById('shakerSortDD');
 
     if (sortSettingsBtn && sortDropdownMenu) {
         sortSettingsBtn.addEventListener('click', (e) => {
@@ -59,6 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (shakerSortBtn){
+        shakerSortBtn.addEventListener('click', () => {
+            currentSortMethod = 'Shaker Sort';
+            if (sortSettingsBtn) sortSettingsBtn.textContent = 'Shaker Sort';
+            if (sortDropdownMenu) sortDropdownMenu.classList.remove('show');
+        })
+    }
+
     if (randomiseBtn) {
         randomiseBtn.addEventListener('click', () => {
             randomiseArray(currentData.array, currentData.sticks);
@@ -68,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sort button functionality
     if (sortBtn) {
         sortBtn.addEventListener('click', async () => {
-            if (allSorted === true) statusText.textContent = randomiseArrayPrompt[random(0, randomiseArrayPrompt.length - 1)];
+            if (allSorted === true) message(randomiseArrayPrompt[random(0, randomiseArrayPrompt.length - 1)]);
             else {
                 sorting = true;
                 sortBtn.disabled = true;
@@ -83,6 +92,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'Insertion Sort':
                         await insertionSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
+                        break;
+                    case 'Shaker Sort':
+                        await shakerSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
                         break;
                     default:
                         console.error('Invalid sort method selected');
@@ -101,6 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function message(msg){
+    statusText.textContent = msg;
+}
 
 function random(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;

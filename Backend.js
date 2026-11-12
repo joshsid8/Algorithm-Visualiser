@@ -156,15 +156,6 @@ async function selectionSort(array, sticks) {
 
 async function insertionSort(array, sticks) {
     const n = array.length;
-
-    // Changes & Fixes Summary:
-    // 1. Infinite loop fix: In the original code, the index variable was never decremented inside the loop.
-    // 2. Index tracking & swap fix: The original code swapped array[i] and array[latter] directly instead of moving
-    //    the current element step-by-step through adjacent swaps (j and j - 1), which corrupted the array order and stick heights.
-    // 3. Comparisons and visual highlights: Added proper comparison highlighting ('comparing'), comparison counting for each check,
-    //    and cleaned up 'swapping' / 'comparing' CSS classes appropriately.
-    // 4. Sorted state completion: Added a final pass to mark all sticks (indices 0 to n - 1) as 'sorted' so checkAllSorted() registers completion.
-
     for (let i = 1; i < n; i++) {
         let j = i;
 
@@ -211,6 +202,16 @@ async function insertionSort(array, sticks) {
         sticks[i].classList.add('sorted');
     }
     update(sticks);
+}
+
+// TODO: Get this done! Its basically like bubble sort, but you go backwards after forwards instead. a boolean is needed here.
+async function shakerSort(array, sticks) {
+    const n = array.length;
+    message("we havent made this yet 😅");
+    for (let i = 0; i < n; i++) {
+        // j will be the one moving left/right to be sorted, the smallest or largest stick
+        let j = i;
+    }
 }
 
 function update(sticks) {
