@@ -3,12 +3,14 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 let currentSortMethod = 'Selection Sort';
 let arrayLength = document.getElementById('lengthInput');
 let speedMs = document.getElementById('speedInput');
+
 let swaps = 0;
 let comparisons = 0;
 let statusText = document.getElementById('allSortedValue');
+
 let allSorted = false;
 let sorting = false;
-let waitOnComparison = false;
+let waitOnComparison = true;
 
 function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visualizer-container') {
     statusText.textContent = '';
@@ -40,8 +42,8 @@ function initialiseArray(size = parseInt(arrayLength.value), containerId = 'visu
 
     return { array, sticks: sticks };
 }
-// TODO: Array length changing isnt being used. find a fix
 function randomiseArray(array, sticks) {
+
     if (!sticks && typeof currentData !== 'undefined' && currentData.sticks) {
         sticks = currentData.sticks;
     }
@@ -160,7 +162,6 @@ async function insertionSort(array, sticks) {
         let j = i;
 
         while (j > 0) {
-            // Highlight active comparison
             sticks[j].classList.add('comparing');
             sticks[j - 1].classList.add('comparing');
             comparisons++;
@@ -170,15 +171,12 @@ async function insertionSort(array, sticks) {
                 sticks[j].classList.remove('comparing');
                 sticks[j - 1].classList.remove('comparing');
 
-                // Highlight active swap
                 sticks[j].classList.add('swapping');
                 sticks[j - 1].classList.add('swapping');
                 swaps++;
 
-                // Swap values in JS array
                 [array[j], array[j - 1]] = [array[j - 1], array[j]];
 
-                // Update DOM heights
                 sticks[j].style.height = `${array[j]}%`;
                 sticks[j - 1].style.height = `${array[j - 1]}%`;
                 update(sticks);
@@ -204,14 +202,75 @@ async function insertionSort(array, sticks) {
     update(sticks);
 }
 
-// TODO: Get this done! Its basically like bubble sort, but you go backwards after forwards instead. a boolean is needed here.
 async function shakerSort(array, sticks) {
     const n = array.length;
-    message("we havent made this yet 😅");
-    for (let i = 0; i < n; i++) {
-        // j will be the one moving left/right to be sorted, the smallest or largest stick
-        let j = i;
+    let left = 0;
+    let right = n - 1;
+    let swapped = false;
+    while (left < right) {
+        swapped = false;
+        for (let j = left; j < right; j++) {
+            sticks[j].classList.add('comparing');
+            sticks[j + 1].classList.add('comparing');
+            comparisons++;
+            await sleep(speedMs.value);
+
+            if (array[j] > array[j + 1]) {
+                sticks[j].classList.add('swapping');
+                sticks[j + 1].classList.add('swapping');
+                swaps++;
+
+                [array[j], array[j + 1]] = [array[j + 1], array[j]];
+
+                sticks[j].style.height = `${array[j]}%`;
+                sticks[j + 1].style.height = `${array[j + 1]}%`;
+                update(sticks);
+                await sleep(speedMs.value);
+                sticks[j].classList.remove('swapping');
+                sticks[j + 1].classList.remove('swapping');
+                swapped = true;
+            }
+            sticks[j].classList.remove('comparing');
+            sticks[j + 1].classList.remove('comparing');
+        }
+        if (!swapped) {
+            forceAllSorted(sticks);
+            break;
+        }
+        sticks[right].classList.add('sorted');
+        right--;
+        for (let j = right; j > left; j--) {
+            sticks[j].classList.add('comparing');
+            sticks[j - 1].classList.add('comparing');
+            comparisons++;
+            await sleep(speedMs.value);
+
+            if (array[j] < array[j - 1]){
+                sticks[j].classList.add('swapping');
+                sticks[j - 1].classList.add('swapping');
+                swaps++;
+
+                [array[j], array[j - 1]] = [array[j - 1], array[j]];
+
+                sticks[j].style.height = `${array[j]}%`;
+                sticks[j - 1].style.height = `${array[j - 1]}%`;
+                update(sticks);
+                await sleep(speedMs.value);
+                sticks[j].classList.remove('swapping');
+                sticks[j - 1].classList.remove('swapping');
+            }
+            sticks[j].classList.remove('comparing');
+            sticks[j - 1].classList.remove('comparing');
+        }
+        sticks[left].classList.add('sorted');
+        left++;
+        update(sticks);
     }
+}
+
+// TODO: Get this done. Good luck!
+async function mergeSort(array, sticks){
+    message("[insert amazing merge sort algorithm here]");
 }
 
 function update(sticks) {
@@ -219,6 +278,13 @@ function update(sticks) {
     document.getElementById('swapsValue').textContent = swaps.toString();
     document.getElementById('comparisonsValue').textContent = comparisons.toString();
     statusText.textContent = check === false ? 'Sorting...' : 'Everything is sorted!';
+}
+
+// this is used to assume all elements are sorted, even when all bars havent been highlighted
+function forceAllSorted(sticks) {
+    for (let i = 0; i < sticks.length; i++)
+        sticks[i].classList.add('sorted');
+    update(sticks);
 }
 
 function checkAllSorted(sticks) {

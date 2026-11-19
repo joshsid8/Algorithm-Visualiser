@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectionSortBtn = document.getElementById('selectionSortDD');
     const insertionSortBtn = document.getElementById('insertionSortDD');
     const shakerSortBtn = document.getElementById('shakerSortDD');
+    const mergeSortBtn = document.getElementById('mergeSortDD');
 
     if (sortSettingsBtn && sortDropdownMenu) {
         sortSettingsBtn.addEventListener('click', (e) => {
@@ -34,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const randomiseBtn = document.getElementById('randomiseBtn');
     const speedValue = document.getElementById('speedValue');
+    const lengthValue = document.getElementById('lengthValue');
     const sortBtn = document.getElementById('sortBtn');
 
     if (bubbleSortBtn){
@@ -68,6 +70,14 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    if (mergeSortBtn){
+        mergeSortBtn.addEventListener('click', () => {
+            currentSortMethod = 'Merge Sort';
+            if (sortSettingsBtn) sortSettingsBtn.textContent = 'Merge Sort';
+            if (sortDropdownMenu) sortDropdownMenu.classList.remove('show');
+        })
+    }
+
     if (randomiseBtn) {
         randomiseBtn.addEventListener('click', () => {
             randomiseArray(currentData.array, currentData.sticks);
@@ -82,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 sorting = true;
                 sortBtn.disabled = true;
                 randomiseBtn.disabled = true;
-                // TODO: We need a dropdown to select the sort algorithm
+
                 switch (currentSortMethod) {
                     case 'Selection Sort':
                         await selectionSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
@@ -95,6 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         break;
                     case 'Shaker Sort':
                         await shakerSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
+                        break;
+                    case 'Merge Sort':
+                        await mergeSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
                         break;
                     default:
                         console.error('Invalid sort method selected');
@@ -110,6 +123,18 @@ document.addEventListener('DOMContentLoaded', () => {
         speedValue.textContent = speedMs.value;
         speedMs.addEventListener('input', () => {
             speedValue.textContent = speedMs.value;
+        });
+    }
+
+    if (lengthValue) {
+        lengthValue.textContent = arrayLength.value;
+        arrayLength.addEventListener('input', () => {
+            lengthValue.textContent = arrayLength.value;
+
+            if (!sorting) {
+                currentData = initialiseArray(parseInt(arrayLength.value));
+                randomiseArray(currentData.array, currentData.sticks);
+            }
         });
     }
 });
