@@ -269,8 +269,24 @@ async function shakerSort(array, sticks) {
 }
 
 // TODO: Get this done. Good luck!
-async function mergeSort(array, sticks){
-    message("[insert amazing merge sort algorithm here]");
+async function mergeSort(array, sticks, start = 0, end = array.length - 1) {
+    if (start >= end) return; // Base case: 1 element is already sorted
+
+    const mid = Math.floor((start + end) / 2);
+
+    // 1. Recursively sort the left half
+    await mergeSort(array, sticks, start, mid);
+
+    // 2. Recursively sort the right half
+    await mergeSort(array, sticks, mid + 1, end);
+
+    // 3. Merge both halves together
+    await merge(array, sticks, start, mid, end);
+}
+async function merge(array, sticks, start, mid, end){
+    let temp = [];
+    let i = start;
+    let j = mid + 1;
 }
 
 function update(sticks) {
