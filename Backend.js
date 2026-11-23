@@ -1,5 +1,27 @@
 // We don't know what promise is, but we use it anyway!!!
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+let cancelCurrentSleep = null;
+
+function sleep(ms, cancellable = true) {
+    return new Promise((resolve, reject) => {
+        if (cancellable && !sorting) {
+            reject(new Error('SORT_STOPPED'));
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            if (cancellable) cancelCurrentSleep = null;
+            resolve();
+        }, ms);
+
+        if (cancellable) {
+            cancelCurrentSleep = () => {
+                clearTimeout(timer);
+                cancelCurrentSleep = null;
+                reject(new Error('SORT_STOPPED'));
+            };
+        }
+    });
+}
 let currentSortMethod = 'Selection Sort';
 let arrayLength = document.getElementById('lengthInput');
 let speedMs = document.getElementById('speedInput');
@@ -72,6 +94,26 @@ function randomiseArray(array, sticks) {
         }
     }
 }
+
+function shuffle(array, sticks) {
+
+    if (!sticks && typeof currentData !== 'undefined' && currentData.sticks) {
+        sticks = currentData.sticks;
+    }
+
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+
+    if (sticks) {
+        for (let i = 0; i < sticks.length; i++) {
+            sticks[i].classList.remove('sorted', 'comparing', 'swapping', 'sorted-all');
+            sticks[i].style.height = `${array[i]}%`;
+        }
+    }
+}
+
 
 // sample from gemini
 async function bubbleSort(array, sticks) {
@@ -268,25 +310,60 @@ async function shakerSort(array, sticks) {
     }
 }
 
-// TODO: Get this done. Good luck!
-async function mergeSort(array, sticks, start = 0, end = array.length - 1) {
-    if (start >= end) return; // Base case: 1 element is already sorted
+async function mergeSort(array, sticks) {
+    async function sortRange(start, end) {
+        if (end - start < 2) return;
 
-    const mid = Math.floor((start + end) / 2);
+        const middle = Math.floor((start + end) / 2);
+        await sortRange(start, middle);
+        await sortRange(middle, end);
 
-    // 1. Recursively sort the left half
-    await mergeSort(array, sticks, start, mid);
+        const left = array.slice(start, middle);
+        const right = array.slice(middle, end);
+        let i = 0;
+        let j = 0;
 
-    // 2. Recursively sort the right half
-    await mergeSort(array, sticks, mid + 1, end);
+        for (let position = start; position < end; position++) {
+            let value;
+            if (i < left.length && j < right.length) {
+                comparisons++;
+                sticks[start + i].classList.add('comparing');
+                sticks[middle + j].classList.add('comparing');
+                update(sticks);
+                if (waitOnComparison) await sleep(speedMs.value);
+                sticks[start + i].classList.remove('comparing');
+                sticks[middle + j].classList.remove('comparing');
+                value = left[i] <= right[j] ? left[i++] : right[j++];
+            }
+            else value = i < left.length ? left[i++] : right[j++];
 
-    // 3. Merge both halves together
-    await merge(array, sticks, start, mid, end);
+            sticks[position].classList.add('swapping');
+            array[position] = value;
+            sticks[position].style.height = `${value}%`;
+            swaps++;
+            update(sticks);
+            await sleep(speedMs.value);
+            sticks[position].classList.remove('swapping');
+        }
+    }
+
+    await sortRange(0, array.length);
+    forceAllSorted(sticks);
 }
-async function merge(array, sticks, start, mid, end){
-    let temp = [];
-    let i = start;
-    let j = mid + 1;
+
+// TODO: Get this... accursed sort done... eugh! WE DONT LIKE QUICK SORRTTT D:<
+async function quickSort(array, sticks){
+    message("[Enter DISGUSTING quick sort algorithm here]")
+}
+
+async function bogoSort(array, sticks){
+    while (!checkAllSortedRaw(array, sticks)) {
+        shuffle(array);
+        await sleep(speedMs.value);
+        swaps += sticks.length - 1;
+        comparisons++;
+        update(sticks);
+    }
 }
 
 function update(sticks) {
@@ -318,15 +395,24 @@ function checkAllSorted(sticks) {
     return true;
 }
 
-// Improved by Junie
+function checkAllSortedRaw(array, sticks) {
+    for (let i = 0; i < array.length - 1; i++) {
+        if (array[i] > array[i + 1]) {
+            return false;
+        }
+    }
+    forceAllSorted(sticks);
+    return true;
+}
+
 async function allSortedCue(sticks) {
     for (let i = 0; i < sticks.length; i++) {
         if (!sticks[i].classList.contains('sorted') || sticks[i].classList.contains('sorted-all')) {
             return;
         }
     }
-    const waveWidth = 3;
-    const stepDelay = 20;
+    const waveWidth = Math.floor(sticks.length * 0.3);
+    const stepDelay = clamp(20, 100 / sticks.length, 100);
 
     for (let i = 0; i < sticks.length + waveWidth; i++) {
         if (i < sticks.length) {
@@ -335,10 +421,12 @@ async function allSortedCue(sticks) {
         if (i - waveWidth >= 0 && i - waveWidth < sticks.length) {
             sticks[i - waveWidth].classList.remove('sorted-all');
         }
-        await sleep(stepDelay);
+        await sleep(clamp(stepDelay, 10, 100), false);
     }
 
     for (let i = 0; i < sticks.length; i++) {
         sticks[i].classList.remove('sorted-all');
     }
 }
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);

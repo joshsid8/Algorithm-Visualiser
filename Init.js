@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const insertionSortBtn = document.getElementById('insertionSortDD');
     const shakerSortBtn = document.getElementById('shakerSortDD');
     const mergeSortBtn = document.getElementById('mergeSortDD');
+    const quickSortBtn = document.getElementById('quickSortDD');
+    const bogoSortBtn = document.getElementById('bogoSortDD');
 
     if (sortSettingsBtn && sortDropdownMenu) {
         sortSettingsBtn.addEventListener('click', (e) => {
@@ -30,6 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!sortSettingsBtn.contains(e.target) && !sortDropdownMenu.contains(e.target)) {
                 sortDropdownMenu.classList.remove('show');
             }
+        });
+    }
+
+    const stopBtn = document.getElementById('stopBtn');
+
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            sorting = false;
+            if (cancelCurrentSleep) cancelCurrentSleep(); // Wakes up & aborts immediately
+            stopBtn.disabled = true;
         });
     }
 
@@ -78,6 +90,23 @@ document.addEventListener('DOMContentLoaded', () => {
         })
     }
 
+    if (quickSortBtn){
+        quickSortBtn.addEventListener('click', () => {
+            currentSortMethod = 'Quick Sort';
+            if (sortSettingsBtn) sortSettingsBtn.textContent = 'Quick Sort';
+            if (sortDropdownMenu) sortDropdownMenu.classList.remove('show');
+        })
+    }
+
+    if (bogoSortBtn){
+        bogoSortBtn.addEventListener('click', () => {
+            currentSortMethod = 'Bogo Sort';
+            if (sortSettingsBtn) sortSettingsBtn.textContent = 'Bogo Sort';
+            if (sortDropdownMenu) sortDropdownMenu.classList.remove('show');
+        })
+    }
+
+    // Randomise button
     if (randomiseBtn) {
         randomiseBtn.addEventListener('click', () => {
             randomiseArray(currentData.array, currentData.sticks);
@@ -92,7 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 sorting = true;
                 sortBtn.disabled = true;
                 randomiseBtn.disabled = true;
-
+                stopBtn.disabled = false;
+                try {
                 switch (currentSortMethod) {
                     case 'Selection Sort':
                         await selectionSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
@@ -109,11 +139,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     case 'Merge Sort':
                         await mergeSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
                         break;
+                    case 'Quick Sort':
+                        await quickSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
+                        break;
+                    case 'Bogo Sort':
+                        await bogoSort(currentData.array, currentData.sticks, parseInt(speedMs.value));
+                        break;
                     default:
                         console.error('Invalid sort method selected');
                 }
-                sortBtn.disabled = false;
-                randomiseBtn.disabled = false;
+                // sortBtn.disabled = false;
+                // randomiseBtn.disabled = false;
+                }
+                catch (err) {
+                    if (err.message === 'SORT_STOPPED') {
+                        for (const stick of currentData.sticks) {
+                            stick.classList.remove('comparing', 'swapping', 'smallest');
+                        }
+                        randomiseArray(currentData.array, currentData.sticks);
+                        message('Sorting stopped');
+                    } else {
+                        console.error(err);
+                    }
+                }
+                finally {
+                    sorting = false;
+                    sortBtn.disabled = false;
+                    randomiseBtn.disabled = false;
+                    stopBtn.disabled = true;
+                }
             }
         });
     }
